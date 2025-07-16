@@ -1,0 +1,12 @@
+# Copy this file to terraform.tfvars and update with your values
+
+slack_bot_token      = "xoxb-your-actual-slack-bot-token-here"
+slack_signing_secret = "your-slack-signing-secret-here"
+lambda_function_name = "my-company-slack-bot"
+bedrock_model_id     = "us.anthropic.claude-3-5-sonnet-20241022-v2:0"
+
+tags = {
+  Environment = "production"
+  Project     = "slack-bot"
+  Owner       = "platform-team"
+}
