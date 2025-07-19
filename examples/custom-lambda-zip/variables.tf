@@ -13,7 +13,7 @@ variable "lambda_function_name" {
 variable "bedrock_model_id" {
   description = "The Bedrock model ID to use for AI responses"
   type        = string
-  default     = "us.anthropic.claude-3-5-sonnet-20241022-v2:0"
+  default     = "anthropic.claude-3-5-sonnet-20241022-v2:0"
 }
 
 variable "tags" {

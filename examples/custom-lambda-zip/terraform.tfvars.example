@@ -3,7 +3,7 @@
 slack_bot_token      = "xoxb-your-actual-slack-bot-token-here"
 slack_signing_secret = "your-slack-signing-secret-here"
 lambda_function_name = "custom-lambda-zip-terraform-aws-slackbot-lambdalith"
-bedrock_model_id     = "us.anthropic.claude-3-5-sonnet-20241022-v2:0"
+bedrock_model_id     = "anthropic.claude-3-5-sonnet-20241022-v2:0"
 
 tags = {
   Environment = "production"

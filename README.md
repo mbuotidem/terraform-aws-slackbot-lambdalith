@@ -93,7 +93,7 @@ module "slack_bot" {
   source = "./path/to/terraform-aws-slackbot-lambdalith"
 
   # Uses default template with these parameters injected
-  bedrock_model_id = "us.anthropic.claude-3-5-sonnet-20241022-v2:0"
+  bedrock_model_id = "anthropic.claude-3-5-sonnet-20241022-v2:0"
 
   # other variables...
 }
@@ -163,6 +163,7 @@ Check CloudWatch logs for the Lambda function:
 ```bash
 aws logs tail /aws/lambda/your-function-name --follow
 ```
+
 <!-- BEGIN_TF_DOCS -->
 
 
@@ -191,7 +192,8 @@ aws logs tail /aws/lambda/your-function-name --follow
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_bedrock_model_id"></a> [bedrock\_model\_id](#input\_bedrock\_model\_id) | The Bedrock model ID to use for AI responses | `string` | `"us.anthropic.claude-3-5-sonnet-20241022-v2:0"` | no |
+| <a name="input_bedrock_model_id"></a> [bedrock\_model\_id](#input\_bedrock\_model\_id) | The Bedrock model ID to use for AI responses | `string` | `"anthropic.claude-3-5-sonnet-20241022-v2:0"` | no |
+| <a name="input_bedrock_model_inference_profile"></a> [bedrock\_model\_inference\_profile](#input\_bedrock\_model\_inference\_profile) | Inference profile ID to use | `string` | `"us.anthropic.claude-3-5-sonnet-20241022-v2:0"` | no |
 | <a name="input_lambda_function_name"></a> [lambda\_function\_name](#input\_lambda\_function\_name) | Name of the Lambda function | `string` | `"terraform-aws-slackbot-lambdalith"` | no |
 | <a name="input_lambda_layer_name"></a> [lambda\_layer\_name](#input\_lambda\_layer\_name) | Name of the Lambda layer | `string` | `"terraform-aws-slackbot-lambdalith"` | no |
 | <a name="input_lambda_source_path"></a> [lambda\_source\_path](#input\_lambda\_source\_path) | Path to custom Lambda function source code (zip file or directory) | `string` | `""` | no |
@@ -250,84 +252,4 @@ aws logs tail /aws/lambda/your-function-name --follow
 | [null_resource.lambda_layer_build](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) | resource |
 | [time_static.slack_bot_token_update](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/static) | resource |
 | [time_static.slack_signing_secret_update](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/static) | resource |
-<!-- END_TF_DOCS -->
-
-<!-- BEGIN_TF_DOCS -->
-
-
-## Requirements
-
-| Name | Version |
-|------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.11.0 |
-| <a name="requirement_archive"></a> [archive](#requirement\_archive) | ~> 2.0 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | ~> 5.0 |
-| <a name="requirement_local"></a> [local](#requirement\_local) | ~> 2.0 |
-| <a name="requirement_null"></a> [null](#requirement\_null) | ~> 3.0 |
-
-## Providers
-
-| Name | Version |
-|------|---------|
-| <a name="provider_archive"></a> [archive](#provider\_archive) | 2.7.1 |
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 5.100.0 |
-| <a name="provider_local"></a> [local](#provider\_local) | 2.5.3 |
-| <a name="provider_null"></a> [null](#provider\_null) | 3.2.4 |
-
-## Inputs
-
-| Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
-| <a name="input_bedrock_model_id"></a> [bedrock\_model\_id](#input\_bedrock\_model\_id) | The Bedrock model ID to use for AI responses | `string` | `"us.anthropic.claude-3-5-sonnet-20241022-v2:0"` | no |
-| <a name="input_lambda_function_name"></a> [lambda\_function\_name](#input\_lambda\_function\_name) | Name of the Lambda function | `string` | `"terraform-aws-slackbot-lambdalith"` | no |
-| <a name="input_lambda_layer_name"></a> [lambda\_layer\_name](#input\_lambda\_layer\_name) | Name of the Lambda layer | `string` | `"terraform-aws-slackbot-lambdalith"` | no |
-| <a name="input_lambda_source_path"></a> [lambda\_source\_path](#input\_lambda\_source\_path) | Path to custom Lambda function source code (zip file or directory) | `string` | `""` | no |
-| <a name="input_lambda_source_type"></a> [lambda\_source\_type](#input\_lambda\_source\_type) | Type of Lambda source: 'default', 'zip', or 'directory' | `string` | `"default"` | no |
-| <a name="input_lambda_timeout"></a> [lambda\_timeout](#input\_lambda\_timeout) | Lambda function timeout in seconds | `number` | `30` | no |
-| <a name="input_log_retention_days"></a> [log\_retention\_days](#input\_log\_retention\_days) | Number of days to retain logs in CloudWatch | `number` | `731` | no |
-| <a name="input_python_version"></a> [python\_version](#input\_python\_version) | Python version for the Lambda layer | `string` | `"3.12"` | no |
-| <a name="input_slack_app_description"></a> [slack\_app\_description](#input\_slack\_app\_description) | Description of the Slack app assistant | `string` | `"Hi, I am an assistant built using Bolt for Python. I am here to help you out!"` | no |
-| <a name="input_slack_app_name"></a> [slack\_app\_name](#input\_slack\_app\_name) | Name of the Slack app in the manifest | `string` | `"Bolt Python Assistant"` | no |
-| <a name="input_slack_bot_token"></a> [slack\_bot\_token](#input\_slack\_bot\_token) | The Slack bot token for authentication | `string` | n/a | yes |
-| <a name="input_slack_signing_secret"></a> [slack\_signing\_secret](#input\_slack\_signing\_secret) | The Slack signing secret for verification | `string` | n/a | yes |
-| <a name="input_slack_slash_command"></a> [slack\_slash\_command](#input\_slack\_slash\_command) | Slash command for the Slack app | `string` | `"/start-process"` | no |
-| <a name="input_slack_slash_command_description"></a> [slack\_slash\_command\_description](#input\_slack\_slash\_command\_description) | The description for the slash command | `string` | `"Ask a question to the Bedrock bot"` | no |
-| <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to the resources | `map(string)` | `{}` | no |
-
-## Outputs
-
-| Name | Description |
-|------|-------------|
-| <a name="output_api_gateway_endpoint"></a> [api\_gateway\_endpoint](#output\_api\_gateway\_endpoint) | The URL of the API Gateway endpoint for the Slack bot |
-| <a name="output_lambda_function_arn"></a> [lambda\_function\_arn](#output\_lambda\_function\_arn) | The ARN of the Lambda function |
-| <a name="output_slack_app_manifest_path"></a> [slack\_app\_manifest\_path](#output\_slack\_app\_manifest\_path) | The path to the generated Slack app manifest file |
-| <a name="output_slack_bot_endpoint_url"></a> [slack\_bot\_endpoint\_url](#output\_slack\_bot\_endpoint\_url) | The URL used to verify the Slack app |
-| <a name="output_slack_bot_token_console_url"></a> [slack\_bot\_token\_console\_url](#output\_slack\_bot\_token\_console\_url) | The AWS console URL for the Slack bot token secret |
-| <a name="output_slack_bot_token_secret_arn"></a> [slack\_bot\_token\_secret\_arn](#output\_slack\_bot\_token\_secret\_arn) | The ARN of the Secrets Manager secret containing the Slack bot token |
-| <a name="output_slack_bot_token_secret_name"></a> [slack\_bot\_token\_secret\_name](#output\_slack\_bot\_token\_secret\_name) | The name of the Secrets Manager secret containing the Slack bot token |
-
-## Resources
-
-| Name | Type |
-|------|------|
-| [aws_apigatewayv2_api.slack_bot_endpoint](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/apigatewayv2_api) | resource |
-| [aws_apigatewayv2_integration.slack_bot_integration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/apigatewayv2_integration) | resource |
-| [aws_apigatewayv2_route.slack_bot_route](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/apigatewayv2_route) | resource |
-| [aws_apigatewayv2_stage.slack_bot_endpoint_default_stage](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/apigatewayv2_stage) | resource |
-| [aws_cloudwatch_log_group.slack_bot_api_access_log](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
-| [aws_cloudwatch_log_group.slack_bot_lambda_log](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
-| [aws_iam_role.slack_bot_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
-| [aws_iam_role_policy.slack_bot_role_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
-| [aws_iam_role_policy_attachment.lambda_basic_execution](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
-| [aws_lambda_function.slack_bot_lambda](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_function) | resource |
-| [aws_lambda_layer_version.dependencies](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_layer_version) | resource |
-| [aws_lambda_permission.api_gateway_lambda_permission](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_permission) | resource |
-| [aws_secretsmanager_secret.slack_bot_token](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret) | resource |
-| [aws_secretsmanager_secret.slack_signing_secret](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret) | resource |
-| [aws_secretsmanager_secret_version.slack_bot_token](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret_version) | resource |
-| [aws_secretsmanager_secret_version.slack_signing_secret](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret_version) | resource |
-| [local_file.lambda_code](https://registry.terraform.io/providers/hashicorp/local/latest/docs/resources/file) | resource |
-| [local_file.slack_app_manifest](https://registry.terraform.io/providers/hashicorp/local/latest/docs/resources/file) | resource |
-| [null_resource.lambda_code_trigger](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) | resource |
-| [null_resource.lambda_layer_build](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) | resource |
 <!-- END_TF_DOCS -->

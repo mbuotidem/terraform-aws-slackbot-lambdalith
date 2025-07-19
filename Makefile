@@ -28,6 +28,9 @@ fmt: ## Format Terraform files
 
 docs: ## Generate documentation
 	terraform-docs .
+	terraform-docs ./examples/basic
+	terraform-docs ./examples/custom-lambda-zip
+	terraform-docs ./examples/custom-lambda-directory
 
 test: ## Run tests on all examples
 	@for example in examples/*/; do \

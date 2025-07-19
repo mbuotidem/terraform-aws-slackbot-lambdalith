@@ -1,6 +1,8 @@
 # Data sources
 data "aws_region" "current" {}
 
+data "aws_caller_identity" "current" {}
+
 # Build Lambda layer from requirements.txt
 resource "null_resource" "lambda_layer_build" {
   triggers = {
@@ -50,7 +52,7 @@ resource "null_resource" "lambda_code_trigger" {
   triggers = {
     shell_hash = sha256(join("", [
       file("${path.module}/lambda/index.py"),
-      var.bedrock_model_id
+      var.bedrock_model_inference_profile
     ]))
   }
 }
@@ -60,7 +62,7 @@ resource "local_file" "lambda_code" {
   count = var.lambda_source_path == "" ? 1 : 0
 
   content = templatefile("${path.module}/lambda/index.py", {
-    bedrock_model_id = var.bedrock_model_id
+    bedrock_model_id = var.bedrock_model_inference_profile
 
   })
   filename = "${path.module}/lambda_build/index.py"
@@ -90,3 +92,8 @@ data "archive_file" "custom_lambda_zip" {
   source_dir  = var.lambda_source_path
   output_path = "${path.module}/lambda_function_custom.zip"
 }
+
+data "aws_bedrock_foundation_model" "anthropic" {
+  model_id = var.bedrock_model_id
+}
+

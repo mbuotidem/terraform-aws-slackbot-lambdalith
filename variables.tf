@@ -50,6 +50,13 @@ variable "lambda_timeout" {
 variable "bedrock_model_id" {
   description = "The Bedrock model ID to use for AI responses"
   type        = string
+  default     = "anthropic.claude-3-5-sonnet-20241022-v2:0"
+}
+
+# Obtain from https://docs.aws.amazon.com/bedrock/latest/userguide/inference-profiles-support.html
+variable "bedrock_model_inference_profile" {
+  description = "Inference profile ID to use"
+  type        = string
   default     = "us.anthropic.claude-3-5-sonnet-20241022-v2:0"
 }
 

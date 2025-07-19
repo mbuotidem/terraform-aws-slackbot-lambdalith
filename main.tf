@@ -86,6 +86,7 @@ resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
+
 # IAM Policy for Lambda
 resource "aws_iam_role_policy" "slack_bot_role_policy" {
   name = var.lambda_function_name
@@ -97,7 +98,7 @@ resource "aws_iam_role_policy" "slack_bot_role_policy" {
       {
         Action   = "bedrock:InvokeModel"
         Effect   = "Allow"
-        Resource = "*"
+        Resource = [data.aws_bedrock_foundation_model.anthropic.model_arn, "arn:aws:bedrock:*::foundation-model/${var.bedrock_model_id}", "arn:aws:bedrock:*:${data.aws_caller_identity.current.account_id}:inference-profile/us.anthropic.claude-3-5-sonnet-20241022-v2:0"]
       },
       {
         Action = [
@@ -121,7 +122,8 @@ resource "aws_iam_role_policy" "slack_bot_role_policy" {
           "lambda:GetFunction"
         ]
         Effect   = "Allow"
-        Resource = "*"
+        Resource = ["arn:aws:lambda:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:function:${var.lambda_function_name}*", "arn:aws:lambda:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:function:${var.lambda_function_name}*"]
+
       }
     ]
   })
