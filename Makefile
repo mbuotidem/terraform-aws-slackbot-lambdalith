@@ -8,7 +8,7 @@ init: ## Initialize Terraform
 	terraform init
 
 validate: ## Validate Terraform configuration
-	terraform validate
+	terraform init -backend=false terraform validate
 
 plan: ## Generate Terraform plan
 	terraform plan

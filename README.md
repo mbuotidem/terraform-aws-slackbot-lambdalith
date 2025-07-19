@@ -1,13 +1,9 @@
 # AWS Slack Bot with Bedrock Integration
 
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Terraform](https://img.shields.io/badge/terraform-%235835CC.svg?style=flat&logo=terraform&logoColor=white)](https://www.terraform.io/)
-[![AWS](https://img.shields.io/badge/AWS-%23FF9900.svg?style=flat&logo=amazon-aws&logoColor=white)](https://aws.amazon.com/)
-
-A Terraform module for deploying an [AI assistant or agent](https://slack.com/help/articles/33076000248851-Understand-AI-apps-in-Slack) serverless Slack bot on AWS Lambda.
+A Terraform module for deploying a Python based [AI assistant or agent](https://docs.slack.dev/ai/developing-ai-apps) Slack App on AWS Lambda.
 
 ## Use Case
-I built this mainly to explore simple AI apps in Slack using Amazon Bedrock. Its inspired by the [Deploy a Slack gateway for Amazon Bedrock](https://aws.amazon.com/blogs/machine-learning/deploy-a-slack-gateway-for-amazon-bedrock/) blogpost by AWS.
+I built this mainly to explore building simple GenAI apps in Slack using Amazon Bedrock. It is inspired by the [Deploy a Slack gateway for Amazon Bedrock](https://aws.amazon.com/blogs/machine-learning/deploy-a-slack-gateway-for-amazon-bedrock/) blogpost by AWS.
 
 ![alt text](architecture.png)
 
