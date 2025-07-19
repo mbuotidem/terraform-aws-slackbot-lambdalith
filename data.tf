@@ -96,4 +96,3 @@ data "archive_file" "custom_lambda_zip" {
 data "aws_bedrock_foundation_model" "anthropic" {
   model_id = var.bedrock_model_id
 }
-

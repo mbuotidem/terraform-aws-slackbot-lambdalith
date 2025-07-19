@@ -98,7 +98,7 @@ resource "aws_iam_role_policy" "slack_bot_role_policy" {
       {
         Action   = "bedrock:InvokeModel"
         Effect   = "Allow"
-        Resource = [data.aws_bedrock_foundation_model.anthropic.model_arn, "arn:aws:bedrock:*::foundation-model/${var.bedrock_model_id}", "arn:aws:bedrock:*:${data.aws_caller_identity.current.account_id}:inference-profile/us.anthropic.claude-3-5-sonnet-20241022-v2:0"]
+        Resource = [data.aws_bedrock_foundation_model.anthropic.model_arn, "arn:aws:bedrock:*::foundation-model/${var.bedrock_model_id}", "arn:aws:bedrock:*:${data.aws_caller_identity.current.account_id}:inference-profile/${var.bedrock_model_inference_profile}"]
       },
       {
         Action = [
@@ -122,7 +122,7 @@ resource "aws_iam_role_policy" "slack_bot_role_policy" {
           "lambda:GetFunction"
         ]
         Effect   = "Allow"
-        Resource = ["arn:aws:lambda:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:function:${var.lambda_function_name}*", "arn:aws:lambda:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:function:${var.lambda_function_name}*"]
+        Resource = ["arn:aws:lambda:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:function:${var.lambda_function_name}*"]
 
       }
     ]
@@ -235,7 +235,7 @@ resource "aws_lambda_permission" "api_gateway_lambda_permission" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.slack_bot_lambda.function_name
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_apigatewayv2_api.slack_bot_endpoint.execution_arn}/*/*/"
+  source_arn    = "${aws_apigatewayv2_api.slack_bot_endpoint.execution_arn}/*"
 }
 
 # Generate Slack app manifest with API Gateway URL
