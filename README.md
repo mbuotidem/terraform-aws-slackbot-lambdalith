@@ -7,12 +7,12 @@ I built this mainly to explore building simple GenAI apps in Slack using Amazon 
 
 ![alt text](architecture.png)
 
-This module is for you if you want to crank out a quick protoype and/or want to have all your code in a monolithic lambda. It uses the [lazy listener pattern](https://tools.slack.dev/bolt-python/concepts/lazy-listeners/) to allow you perform long running process while still meeting Slacks 3 second reply requirement.  If you want a microservice based approach, I highly recommend [@amancevice's](https://github.com/amancevice) excellent [module](https://github.com/amancevice/terraform-aws-slackbot).
+This module is for you if you want to crank out a quick protoype and/or want to have all your code in a monolithic lambda. It uses the [lazy listener pattern](https://tools.slack.dev/bolt-python/concepts/lazy-listeners/) to allow you perform long running processes while still meeting Slacks 3 second reply requirement.  If you want a microservice based approach, I highly recommend [@amancevice's](https://github.com/amancevice) excellent [module](https://github.com/amancevice/terraform-aws-slackbot).
 
 ## Prerequisites
 Docker
 
-## Quick Start
+## Setup
 
 ```hcl
 module "slack_bot" {
@@ -34,36 +34,35 @@ module "slack_bot" {
 }
 ```
 
-1. Run terraform `terraform apply`. This will use dummy default values for `slack_bot_token` and `slack_signing_secret` to create your slack lambda.
+1. **Deploy the Terraform module**
+   Run `terraform apply`. This will use dummy default values for `slack_bot_token` and `slack_signing_secret` to create your Slack Lambda and generate a Slack app manifest at `slack_app_manifest.json`.
 
-1. Use the generated Slack app [manifest](https://api.slack.com/reference/manifests) file at `slack_app_manifest.json` to [Create a New Slack app](https://api.slack.com/reference/manifests). You can also find the manifest stored as an SSM Parameter Store parameter.
+2. **Create your Slack app using the manifest**
+   - Go to [Slack API: Your Apps](https://api.slack.com/apps)
+   - Click **Create New App** → **From an app manifest**
+   - Select your workspace and click **Next**
+   - Copy the contents of `slack_app_manifest.json` and paste into the manifest field
+   - Click **Next**, review, and then **Create**
 
-1. After installing the app in your Slack workspace, grab the values for `slack_bot_token` and `slack_signing_secret`from the **Basic Information** and **OAuth & Permissions** pages.
+3. **Install the app in your Slack workspace**
+   - Click **Install to Workspace** and authorize the app
 
-1. Update your module with the values and re-run `terraform apply`.
+4. **Retrieve Slack credentials**
+   - Get the **Bot User OAuth Token** (starts with `xoxb-`) from the **OAuth & Permissions** page
+   - Get the **Signing Secret** from the **Basic Information** page
 
-## Detailed Setup Steps
+5. **Update your Terraform configuration**
+   - Uncomment and set `slack_bot_token` and `slack_signing_secret` in your module block
 
-Use the manifest file (`slack_app_manifest.json`) to create your Slack app. This manifest includes:
+6. **Apply the changes**
+   - Rerun `terraform apply` to update your deployment with the real credentials
 
-- **Event subscription URL**: Points to your API Gateway endpoint
-- **Slash command URL**: Points to your API Gateway endpoint
-- **OAuth redirect URLs**: Points to your API Gateway endpoint for OAuth flow
+---
 
-### Creating your Slack app:
+**Tip:**
+You can also find the generated manifest stored as an SSM Parameter Store parameter.
 
-1. Go to the [Slack API: Your Apps](https://api.slack.com/apps) page
-1. Click **Create New App**
-1. Choose **From an app manifest**
-1. Select the workspace where you want to develop your app and click **Next**
-1. Copy the contents of the generated `slack_app_manifest.json` file
-1. Paste the manifest into the input field and click **Next**
-1. Review the configuration summary and click **Create**
-1. Get the Bot User OAuth Token from the OAuth and Permissions page (starts with xoxb-)
-1. Get the Signing Secret from the Basic Information page
-1. Uncomment `slack_bot_token` and `slack_signing_secret` and supply them.
-1. Rerun `terraform apply`.
-1. Install the app into your Slack workspace
+---
 
 
 

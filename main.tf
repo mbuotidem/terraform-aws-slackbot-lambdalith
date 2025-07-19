@@ -247,7 +247,7 @@ resource "local_file" "slack_app_manifest" {
     slash_command             = var.slack_slash_command
     slash_command_description = var.slack_slash_command_description
   })
-  filename = "${path.module}/slack_app_manifest.json"
+  filename = "${path.cwd}/slack_app_manifest.json"
 }
 
 # Store copy of Slack app manifest in SSM Parameter Store
