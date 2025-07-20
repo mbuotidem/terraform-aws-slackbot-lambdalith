@@ -47,6 +47,12 @@ variable "lambda_timeout" {
   }
 }
 
+variable "enable_dispatcher_provisioned_concurrency" {
+  description = "Enable provisioned concurrency for the dispatcher Lambda to eliminate cold starts"
+  type        = bool
+  default     = true
+}
+
 variable "bedrock_model_id" {
   description = "The Bedrock model ID to use for AI responses"
   type        = string
@@ -119,4 +125,13 @@ variable "slack_slash_command_description" {
   description = "The description for the slash command"
   type        = string
   default     = "Ask a question to the Bedrock bot"
+}
+
+
+variable "lambda_env_vars" {
+  description = "Environment variables to add to Lambda"
+  type        = map(string)
+  default = {
+    "BEDROCK_MODEL_INFERENCE_PROFILE" = "us.anthropic.claude-3-5-sonnet-20241022-v2:0"
+  }
 }

@@ -141,6 +141,12 @@ resource "aws_lambda_layer_version" "dependencies" {
 }
 
 # Lambda Function
+
+# resource "aws_lambda_provisioned_concurrency_config" "slack_bot_lambda" {
+#   function_name                     = aws_lambda_function.slack_bot_lambda.function_name
+#   provisioned_concurrent_executions = 1
+#   qualifier                         = aws_lambda_function.slack_bot_lambda.version
+# }
 resource "aws_lambda_function" "slack_bot_lambda" {
   filename = var.lambda_source_type == "zip" ? var.lambda_source_path : (var.lambda_source_type == "directory" ? data.archive_file.custom_lambda_zip[0].output_path : data.archive_file.lambda_zip[0].output_path)
 
@@ -158,11 +164,19 @@ resource "aws_lambda_function" "slack_bot_lambda" {
   layers = [aws_lambda_layer_version.dependencies.arn]
 
   environment {
-    variables = {
+    variables = merge(var.lambda_env_vars, {
       token  = aws_secretsmanager_secret.slack_bot_token.name
       secret = aws_secretsmanager_secret.slack_signing_secret.name
-    }
+    })
   }
+
+  # snap_start {
+  #   apply_on = "PublishedVersions"
+  # }
+
+
+
+  memory_size = 512
 
   logging_config {
     log_format = "JSON"
@@ -179,6 +193,59 @@ resource "aws_lambda_function" "slack_bot_lambda" {
   ]
 
   tags = var.tags
+}
+
+# CloudWatch Log Group for Dispatcher Lambda
+resource "aws_cloudwatch_log_group" "slack_bot_dispatcher_log" {
+  name              = "/aws/lambda/${var.lambda_function_name}-dispatcher"
+  retention_in_days = var.log_retention_days
+
+  tags = var.tags
+}
+
+# IAM Role for Dispatcher Lambda
+resource "aws_iam_role" "slack_bot_dispatcher_role" {
+  name        = "${var.lambda_function_name}-dispatcher"
+  description = "Role for Slack bot dispatcher lambda"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+    }]
+  })
+
+  tags = var.tags
+}
+
+# Attach AWS managed policy for Lambda basic execution (dispatcher)
+resource "aws_iam_role_policy_attachment" "dispatcher_lambda_basic_execution" {
+  role       = aws_iam_role.slack_bot_dispatcher_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+# IAM Policy for Dispatcher Lambda
+resource "aws_iam_role_policy" "slack_bot_dispatcher_policy" {
+  name = "${var.lambda_function_name}-dispatcher"
+  role = aws_iam_role.slack_bot_dispatcher_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "lambda:InvokeFunction"
+        ]
+        Effect   = "Allow"
+        Resource = [aws_lambda_function.slack_bot_lambda.arn]
+      }
+    ]
+  })
 }
 
 # API Gateway HTTP API
@@ -218,8 +285,53 @@ resource "aws_apigatewayv2_stage" "slack_bot_endpoint_default_stage" {
 resource "aws_apigatewayv2_integration" "slack_bot_integration" {
   api_id                 = aws_apigatewayv2_api.slack_bot_endpoint.id
   integration_type       = "AWS_PROXY"
-  integration_uri        = aws_lambda_function.slack_bot_lambda.invoke_arn
+  integration_uri        = aws_lambda_function.slack_bot_dispatcher.invoke_arn
   payload_format_version = "2.0"
+}
+
+# Dispatcher Lambda Function (returns immediate response and invokes main Lambda async)
+resource "aws_lambda_function" "slack_bot_dispatcher" {
+  filename         = data.archive_file.dispatcher_zip.output_path
+  function_name    = "${var.lambda_function_name}-dispatcher"
+  role             = aws_iam_role.slack_bot_dispatcher_role.arn
+  handler          = "index.handler"
+  runtime          = "python${var.python_version}"
+  timeout          = 3
+  description      = "Dispatcher that returns immediate response and invokes main Lambda async"
+  source_code_hash = data.archive_file.dispatcher_zip.output_base64sha256
+  publish          = true
+
+  environment {
+    variables = {
+      MAIN_LAMBDA_FUNCTION = aws_lambda_function.slack_bot_lambda.function_name
+    }
+  }
+
+  logging_config {
+    log_format = "JSON"
+    log_group  = aws_cloudwatch_log_group.slack_bot_dispatcher_log.name
+  }
+
+  depends_on = [
+    aws_iam_role_policy.slack_bot_dispatcher_policy,
+    aws_cloudwatch_log_group.slack_bot_dispatcher_log
+  ]
+
+  tags = var.tags
+}
+
+# Provisioned Concurrency for Dispatcher Lambda (keeps it warm for instant responses)
+resource "aws_lambda_provisioned_concurrency_config" "slack_bot_dispatcher_concurrency" {
+  count                             = var.enable_dispatcher_provisioned_concurrency ? 1 : 0
+  function_name                     = aws_lambda_function.slack_bot_dispatcher.function_name
+  provisioned_concurrent_executions = 1
+  qualifier                         = aws_lambda_function.slack_bot_dispatcher.version
+}
+
+resource "aws_lambda_provisioned_concurrency_config" "slack_bot_lambda" {
+  function_name                     = aws_lambda_function.slack_bot_lambda.function_name
+  provisioned_concurrent_executions = 1
+  qualifier                         = aws_lambda_function.slack_bot_lambda.version
 }
 
 # API Gateway Route
@@ -233,7 +345,7 @@ resource "aws_apigatewayv2_route" "slack_bot_route" {
 resource "aws_lambda_permission" "api_gateway_lambda_permission" {
   statement_id  = "AllowExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.slack_bot_lambda.function_name
+  function_name = aws_lambda_function.slack_bot_dispatcher.function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.slack_bot_endpoint.execution_arn}/*"
 }
@@ -263,5 +375,11 @@ resource "aws_ssm_parameter" "slack_app_manifest" {
     slash_command_description = var.slack_slash_command_description
   })
 
+  tags = var.tags
+}
+
+
+resource "aws_cloudwatch_event_bus" "bus" {
+  name = var.lambda_function_name
   tags = var.tags
 }

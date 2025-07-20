@@ -22,6 +22,14 @@ apply: ## Apply Terraform configuration in all examples with auto-approve
 		terraform apply -auto-approve; \
 		cd - > /dev/null; \
 	done
+destroy: ## Apply Terraform configuration in all examples with auto-approve
+	@for example in examples/*/; do \
+		echo "Destroying $$example"; \
+		cd "$$example"; \
+		terraform init; \
+		terraform destroy -auto-approve; \
+		cd - > /dev/null; \
+	done
 
 fmt: ## Format Terraform files
 	terraform fmt -recursive
