@@ -14,8 +14,10 @@ output "slack_bot_token_console_url" {
 }
 
 output "slack_bot_endpoint_url" {
-  description = "The URL used to verify the Slack app"
-  value       = "${aws_apigatewayv2_api.slack_bot_endpoint.api_endpoint}/"
+  description = "The URL used to verify the Slack app (API Gateway or Lambda Function URL)"
+  value = var.use_function_url ? var.function_url : (
+    length(aws_apigatewayv2_api.slack_bot_endpoint) > 0 ? "${aws_apigatewayv2_api.slack_bot_endpoint[0].api_endpoint}/" : null
+  )
 }
 
 output "lambda_function_name" {
@@ -29,8 +31,8 @@ output "lambda_function_arn" {
 }
 
 output "api_gateway_id" {
-  description = "The ID of the API Gateway"
-  value       = aws_apigatewayv2_api.slack_bot_endpoint.id
+  description = "The ID of the API Gateway (if created)"
+  value       = length(aws_apigatewayv2_api.slack_bot_endpoint) > 0 ? aws_apigatewayv2_api.slack_bot_endpoint[0].id : null
 }
 
 output "lambda_layer_arn" {

@@ -39,6 +39,7 @@ docs: ## Generate documentation
 	terraform-docs ./examples/basic
 	terraform-docs ./examples/custom-lambda-zip
 	terraform-docs ./examples/custom-lambda-directory
+	terraform-docs ./examples/lambda-function-url
 
 test: ## Run tests on all examples
 	@for example in examples/*/; do \
