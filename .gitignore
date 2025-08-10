@@ -56,3 +56,4 @@ Thumbs.db
 # Misc
 lambda_function_custom*
 slack_app_manifest.json
+dispatcher_build/
