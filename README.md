@@ -193,7 +193,7 @@ aws logs tail /aws/lambda/your-function-name --follow
 |------|-------------|------|---------|:--------:|
 | <a name="input_bedrock_model_id"></a> [bedrock\_model\_id](#input\_bedrock\_model\_id) | The Bedrock model ID to use for AI responses | `string` | `"anthropic.claude-3-5-sonnet-20241022-v2:0"` | no |
 | <a name="input_bedrock_model_inference_profile"></a> [bedrock\_model\_inference\_profile](#input\_bedrock\_model\_inference\_profile) | Inference profile ID to use | `string` | `"us.anthropic.claude-3-5-sonnet-20241022-v2:0"` | no |
-| <a name="input_enable_application_insights"></a> [enable\_application\_insights](#input\_enable\_application\_insights) | n/a | `bool` | `false` | no |
+| <a name="input_enable_application_signals"></a> [enable\_application\_signals](#input\_enable\_application\_signals) | If true, enables Application signals for monitoring and observability. | `bool` | `false` | no |
 | <a name="input_enable_dispatcher_provisioned_concurrency"></a> [enable\_dispatcher\_provisioned\_concurrency](#input\_enable\_dispatcher\_provisioned\_concurrency) | Enable provisioned concurrency for the dispatcher Lambda to eliminate cold starts | `bool` | `true` | no |
 | <a name="input_lambda_env_vars"></a> [lambda\_env\_vars](#input\_lambda\_env\_vars) | Environment variables to add to Lambda | `map(string)` | <pre>{<br/>  "BEDROCK_MODEL_INFERENCE_PROFILE": "us.anthropic.claude-3-5-sonnet-20241022-v2:0"<br/>}</pre> | no |
 | <a name="input_lambda_function_name"></a> [lambda\_function\_name](#input\_lambda\_function\_name) | Name of the Lambda function | `string` | `"terraform-aws-slackbot-lambdalith"` | no |
@@ -246,7 +246,7 @@ aws logs tail /aws/lambda/your-function-name --follow
 | [aws_iam_role_policy.slack_bot_dispatcher_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
 | [aws_iam_role_policy.slack_bot_role_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
 | [aws_iam_role_policy_attachment.dispatcher_lambda_basic_execution](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
-| [aws_iam_role_policy_attachment.lambda_application_insights](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
+| [aws_iam_role_policy_attachment.lambda_application_signals](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
 | [aws_iam_role_policy_attachment.lambda_basic_execution](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
 | [aws_lambda_function.slack_bot_dispatcher](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_function) | resource |
 | [aws_lambda_function.slack_bot_lambda](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_function) | resource |

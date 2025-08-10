@@ -142,8 +142,9 @@ variable "use_function_url" {
   default     = false
 }
 
-variable "enable_application_insights" {
-  default = false
+variable "enable_application_signals" {
+  default     = false
+  description = "If true, enables Application signals for monitoring and observability."
 
 }
 

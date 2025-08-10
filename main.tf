@@ -160,7 +160,7 @@ resource "aws_lambda_function" "slack_bot_lambda" {
   publish = true
 
   # Use Lambda layer for dependencies if created
-  layers = var.enable_application_insights ? [aws_lambda_layer_version.dependencies.arn, "arn:aws:lambda:us-east-1:615299751070:layer:AWSOpenTelemetryDistroPython:16"] : [aws_lambda_layer_version.dependencies.arn]
+  layers = var.enable_application_signals ? [aws_lambda_layer_version.dependencies.arn, var.opentelemetry_python_layer_arns[data.aws_region.current]] : [aws_lambda_layer_version.dependencies.arn]
 
   environment {
     variables = merge(
@@ -169,7 +169,7 @@ resource "aws_lambda_function" "slack_bot_lambda" {
         token  = aws_secretsmanager_secret.slack_bot_token.name
         secret = aws_secretsmanager_secret.slack_signing_secret.name
       },
-      var.enable_application_insights ? {
+      var.enable_application_signals ? {
         "AWS_LAMBDA_EXEC_WRAPPER" = "/opt/otel-instrument"
       } : {}
     )
@@ -397,8 +397,8 @@ resource "aws_cloudwatch_event_bus" "bus" {
   tags = var.tags
 }
 
-resource "aws_iam_role_policy_attachment" "lambda_application_insights" {
-  count      = var.enable_application_insights ? 1 : 0
+resource "aws_iam_role_policy_attachment" "lambda_application_signals" {
+  count      = var.enable_application_signals ? 1 : 0
   role       = aws_iam_role.slack_bot_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
