@@ -98,6 +98,8 @@ module "slack_bot" {
 }
 ```
 
+In this mode, once your lambda is completely deployed by Terraform, you will switch to a development cycle that uses the lambda local development [Console to IDE](https://aws.amazon.com/blogs/aws/simplify-serverless-development-with-console-to-ide-and-remote-debugging-for-aws-lambda/) workflow.
+
 ### Custom Directory
 Provide a directory containing your custom Lambda source code:
 
@@ -112,6 +114,8 @@ module "slack_bot" {
 }
 ```
 
+In this mode, you want to continue using Terraform to manage the deployment of the lambda.
+
 ### Custom ZIP File
 Provide a pre-built ZIP file containing your Lambda function:
 
@@ -125,6 +129,8 @@ module "slack_bot" {
   # other variables...
 }
 ```
+
+In this mode, you want to continue using Terraform to manage the deployment of the lambda, but prefer a zip based workflow that could potentially be built in a previous CI build step which is then passed into this module.
 
 ## Lambda Layer for Dependencies
 
