@@ -195,7 +195,6 @@ aws logs tail /aws/lambda/your-function-name --follow
 | <a name="input_bedrock_model_inference_profile"></a> [bedrock\_model\_inference\_profile](#input\_bedrock\_model\_inference\_profile) | Inference profile ID to use | `string` | `"us.anthropic.claude-3-5-sonnet-20241022-v2:0"` | no |
 | <a name="input_enable_application_insights"></a> [enable\_application\_insights](#input\_enable\_application\_insights) | n/a | `bool` | `false` | no |
 | <a name="input_enable_dispatcher_provisioned_concurrency"></a> [enable\_dispatcher\_provisioned\_concurrency](#input\_enable\_dispatcher\_provisioned\_concurrency) | Enable provisioned concurrency for the dispatcher Lambda to eliminate cold starts | `bool` | `true` | no |
-| <a name="input_function_url"></a> [function\_url](#input\_function\_url) | The Lambda Function URL to use in the Slack manifest if use\_function\_url is true. | `string` | `""` | no |
 | <a name="input_lambda_env_vars"></a> [lambda\_env\_vars](#input\_lambda\_env\_vars) | Environment variables to add to Lambda | `map(string)` | <pre>{<br/>  "BEDROCK_MODEL_INFERENCE_PROFILE": "us.anthropic.claude-3-5-sonnet-20241022-v2:0"<br/>}</pre> | no |
 | <a name="input_lambda_function_name"></a> [lambda\_function\_name](#input\_lambda\_function\_name) | Name of the Lambda function | `string` | `"terraform-aws-slackbot-lambdalith"` | no |
 | <a name="input_lambda_layer_name"></a> [lambda\_layer\_name](#input\_lambda\_layer\_name) | Name of the Lambda layer | `string` | `"terraform-aws-slackbot-lambdalith"` | no |

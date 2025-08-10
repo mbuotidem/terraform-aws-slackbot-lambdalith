@@ -142,12 +142,6 @@ variable "use_function_url" {
   default     = false
 }
 
-variable "function_url" {
-  description = "The Lambda Function URL to use in the Slack manifest if use_function_url is true."
-  type        = string
-  default     = ""
-}
-
 variable "enable_application_insights" {
   default = false
 

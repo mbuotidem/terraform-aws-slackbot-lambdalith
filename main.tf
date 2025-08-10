@@ -382,7 +382,7 @@ resource "aws_ssm_parameter" "slack_app_manifest" {
   description = "Slack app manifest for ${var.lambda_function_name}"
   type        = "String"
   value = templatefile("${path.module}/manifest.json.tpl", {
-    api_gateway_url           = var.use_function_url ? var.function_url : (local.create_gateway_and_dispatcher ? "${aws_apigatewayv2_api.slack_bot_endpoint[0].api_endpoint}/" : "")
+    api_gateway_url           = var.use_function_url ? aws_lambda_function_url.slack_bot_lambda[0].function_url : (local.create_gateway_and_dispatcher ? "${aws_apigatewayv2_api.slack_bot_endpoint[0].api_endpoint}/" : "")
     app_name                  = var.slack_app_name
     app_description           = var.slack_app_description
     slash_command             = var.slack_slash_command

@@ -1,4 +1,4 @@
-# Example: Lambda Function URL
+# Lambda Function URL
 
 This example demonstrates how to deploy the Slack bot using an AWS Lambda Function URL instead of API Gateway.
 
