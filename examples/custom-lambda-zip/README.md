@@ -1,8 +1,8 @@
-# Lambda in Zip Example
+# Custom Lambda (ZIP) Example
 
-This example demonstrates a deployment of the Slack bot module where you provide a zip.
+This example demonstrates how to deploy the Slack bot when you provide a pre-packaged ZIP file for your Lambda function.
 
-## Code
+## Terraform Code
 
 ```hcl
 module "slack_bot" {
@@ -21,50 +21,35 @@ module "slack_bot" {
 }
 ```
 
-## Deploy the Module
+## How to Deploy
+
+First, initialize Terraform:
 
 ```bash
-# Initialize Terraform
 terraform init
-
-# Plan the deployment
-terraform plan \
-  -var="slack_bot_token=xoxb-your-token-here" \
-  -var="slack_signing_secret=your-signing-secret"
-
-# Apply the configuration
-terraform apply \
-  -var="slack_bot_token=xoxb-your-token-here" \
-  -var="slack_signing_secret=your-signing-secret"
 ```
 
-**Alternative**: Use a `terraform.tfvars` file:
+Next, create a `terraform.tfvars` file with your Slack credentials:
 
 ```hcl
 # terraform.tfvars
 slack_bot_token      = "xoxb-your-token-here"
 slack_signing_secret = "your-signing-secret"
-lambda_function_name = "my-company-slack-bot"
-bedrock_model_id     = "anthropic.claude-3-5-sonnet-20241022-v2:0"
 ```
 
-Then run:
+Finally, apply the configuration:
+
 ```bash
-terraform plan
 terraform apply
 ```
 
-## Usage
+## Additional Information
 
-1. Update the `slack_bot_token` variable with your actual Slack bot token
-2. Run terraform commands as shown above
-
-## Files
-
-- `main.tf` - Main configuration
-- `variables.tf` - Input variables
-- `outputs.tf` - Output values
-- `terraform.tfvars.example` - Example variable values
+- **`main.tf`**: Main Terraform configuration.
+- **`variables.tf`**: Input variables for the module.
+- **`outputs.tf`**: Output values from the module.
+- **`terraform.tfvars.example`**: Example variable values.
+- **`lambda_function.zip`**: Pre-packaged ZIP file for the Lambda function.
 <!-- BEGIN_TF_DOCS -->
 
 

@@ -1,8 +1,8 @@
-# Basic Slack Bot Example
+# Basic Usage Example
 
-This example demonstrates a basic deployment of the Slack bot module.
+This example demonstrates how to deploy the Slack bot with a basic configuration.
 
-## Basic Example
+## Terraform Code
 
 ```hcl
 module "slack_bot" {
@@ -14,49 +14,34 @@ module "slack_bot" {
 }
 ```
 
-## Deploy the Module
+## How to Deploy
+
+First, initialize Terraform:
 
 ```bash
-# Initialize Terraform
 terraform init
-
-# Plan the deployment
-terraform plan \
-  -var="slack_bot_token=xoxb-your-token-here" \
-  -var="slack_signing_secret=your-signing-secret"
-
-# Apply the configuration
-terraform apply \
-  -var="slack_bot_token=xoxb-your-token-here" \
-  -var="slack_signing_secret=your-signing-secret"
 ```
 
-**Alternative**: Use a `terraform.tfvars` file:
+Next, create a `terraform.tfvars` file with your Slack credentials:
 
 ```hcl
 # terraform.tfvars
-lambda_function_name = "my-slack-bot"
 slack_bot_token      = "xoxb-your-token-here"
 slack_signing_secret = "your-signing-secret"
 ```
 
-Then run:
+Finally, apply the configuration:
+
 ```bash
-terraform plan
 terraform apply
 ```
 
-## Usage
+## Additional Information
 
-1. Update the `slack_bot_token` variable with your actual Slack bot token
-2. Run terraform commands as shown above
-
-## Files
-
-- `main.tf` - Main configuration
-- `variables.tf` - Input variables
-- `outputs.tf` - Output values
-- `terraform.tfvars.example` - Example variable values
+- **`main.tf`**: Main Terraform configuration.
+- **`variables.tf`**: Input variables for the module.
+- **`outputs.tf`**: Output values from the module.
+- **`terraform.tfvars.example`**: Example variable values.
 <!-- BEGIN_TF_DOCS -->
 
 

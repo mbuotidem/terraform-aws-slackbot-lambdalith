@@ -1,8 +1,8 @@
-# Lambda Function URL
+# Lambda Function URL Example
 
 This example demonstrates how to deploy the Slack bot using an AWS Lambda Function URL instead of API Gateway.
 
-## Usage
+## Terraform Code
 
 ```hcl
 module "slack_bot" {
@@ -18,20 +18,34 @@ module "slack_bot" {
 }
 ```
 
-- Set `use_function_url = true` to enable Lambda Function URL mode.
-- Optionally set `function_url` to override the generated URL in the Slack manifest.
+## How to Deploy
 
-## Variables
-See `variables.tf` for all configurable options.
+First, initialize Terraform:
 
-## Outputs
-See `outputs.tf` for available outputs.
+```bash
+terraform init
+```
 
-## Deploy
+Next, create a `terraform.tfvars` file with your Slack credentials:
 
-1. Set your Slack credentials in `terraform.tfvars` or via environment variables.
-2. Run `terraform init && terraform apply`.
-3. Use the output `slack_bot_endpoint_url` as the request URL in your Slack app manifest.
+```hcl
+# terraform.tfvars
+slack_bot_token      = "xoxb-your-token-here"
+slack_signing_secret = "your-signing-secret"
+```
+
+Finally, apply the configuration:
+
+```bash
+terraform apply
+```
+
+## Additional Information
+
+- **`main.tf`**: Main Terraform configuration.
+- **`variables.tf`**: Input variables for the module.
+- **`outputs.tf`**: Output values from the module.
+- **`terraform.tfvars.example`**: Example variable values.
 
 <!-- BEGIN_TF_DOCS -->
 
