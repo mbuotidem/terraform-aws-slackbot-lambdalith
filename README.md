@@ -14,6 +14,8 @@ Docker
 
 ## Setup
 
+Important: The initial apply uses placeholder Slack credentials so the app and manifest can be created. The bot will not respond in Slack until you replace slack_bot_token and slack_signing_secret with real values and re-apply.
+
 ```hcl
 module "slack_bot" {
   source = "mbuotidem/slackbot-lambdalith/aws"
@@ -35,7 +37,10 @@ module "slack_bot" {
 ```
 
 1. **Deploy the Terraform module**
-   Run `terraform apply`. This will use dummy default values for `slack_bot_token` and `slack_signing_secret` to create your Slack Lambda and generate a Slack app manifest at `slack_app_manifest.json`.
+   Run `terraform apply`. This uses dummy default values for `slack_bot_token` and `slack_signing_secret` to create your Slack Lambda and generate a Slack app manifest.
+   - Manifest location: Written to the directory where you run Terraform as `slack_app_manifest.json`.
+   - Also available via outputs: `slack_app_manifest_file` (path) and `slack_app_manifest_content` (JSON).
+   - Stored in SSM Parameter Store at `/slack-app/<lambda_function_name>/manifest`.
 
 2. **Create your Slack app using the manifest**
    - Go to [Slack API: Your Apps](https://api.slack.com/apps)
@@ -60,7 +65,7 @@ module "slack_bot" {
 ---
 
 **Tip:**
-You can also find the generated manifest stored as an SSM Parameter Store parameter.
+You can also find the generated manifest stored as an SSM Parameter Store parameter at `/slack-app/<lambda_function_name>/manifest`.
 
 ---
 
@@ -80,9 +85,14 @@ The module creates the following AWS resources:
 
 It ships with sample lambda function code so you can verify functionality. However, you will ultimately want to wire up your own lambda using either the zip or directory custom sources described [below](#custom-lambda-source-code)
 
-## Custom Lambda Source Code
+## Configuring Lambda Function Source
 
 The module supports three methods for providing Lambda function source code:
+
+Only one mode should be used at a time, controlled by `lambda_source_type`:
+- default: Do not set `lambda_source_path`.
+- directory: Set `lambda_source_type = "directory"` and set `lambda_source_path` to your source folder.
+- zip: Set `lambda_source_type = "zip"` and set `lambda_source_path` to your built zip file.
 
 ### Default (Template-based)
 The default mode uses a template-based approach where the Lambda code is generated from `lambda/index.py` with configurable parameters:
@@ -132,6 +142,8 @@ module "slack_bot" {
 
 In this mode, you want to continue using Terraform to manage the deployment of the lambda, but prefer a zip based workflow that could potentially be built in a previous CI build step which is then passed into this module.
 
+Note: Only set `lambda_source_path` when `lambda_source_type` is `directory` or `zip`. If you leave `lambda_source_type = "default"`, the template-based source will be used and any provided path will be ignored.
+
 ## Lambda Layer for Dependencies
 
 The module supports automatic creation of Lambda layers from a `requirements.txt` file. This works for both default mode (using the built-in `lambda/requirements.txt`) and directory mode (using a `requirements.txt` file in your custom directory). It does not apply to zip mode since the dependencies should be included in your pre-built ZIP file.
@@ -139,8 +151,12 @@ The module supports automatic creation of Lambda layers from a `requirements.txt
 ### How it works:
 
 1. **Requirements file**: Place your Python dependencies in `requirements.txt` in the same directory as your Lambda code
-2. **Automatic building**: The module builds the layer using Docker for correct x86_64 architecture
+2. **Automatic building (requires Docker)**: The module builds the layer using Docker for the linux/amd64 architecture. Ensure Docker is installed and running.
 3. **Layer attachment**: The layer is automatically attached to the Lambda function
+
+Notes:
+- Docker is required for building the layer in default and directory modes; without Docker, the build will fail.
+- For zip mode, package dependencies in your zip, or rely on the generated layer to keep your zip slim.
 
 
 ### Example requirements.txt:
@@ -152,6 +168,26 @@ requests==2.31.0
 slack-bolt>=1.21,<2
 slack-sdk>=3.33.1,<4
 ```
+
+## Choosing your endpoint: Lambda Function URL vs API Gateway
+
+Control this with the `use_function_url` input.
+
+- Lambda Function URL (set `use_function_url = true`)
+   - Pros: Simplest and lowest-cost; fewer resources, fastest latency
+   - Cons: Fewer features (no custom domain, less secure)
+   - When to choose: Prototypes and minimal setups where a public unauthenticated URL is acceptable (Slack request signing still protects your handler but not from denial of wallet attacks).
+
+- API Gateway HTTP API (default)
+   - Pros: Custom domains, WAF, richer logging/monitoring; includes a dispatcher Lambda that returns immediately to satisfy Slack’s 3-second requirement and invokes the main Lambda asynchronously.
+   - Cons: Slightly higher cost/complexity, extra hop reduces latency
+   - When to choose: Production or when you need API features and tighter controls.
+
+The module always outputs `slack_bot_endpoint_url` with the correct URL that Slack will call and that is embedded in the generated manifest.
+
+## Application signals (optional)
+
+Set `enable_application_signals = true` to enable AWS Distro for OpenTelemetry (ADOT) "Application Signals" for Lambda. The module attaches the OpenTelemetry layer and configures auto-instrumentation so you get traces/metrics correlation out of the box. This adds small runtime overhead and may incur additional observability costs.
 
 ## Troubleshooting
 
@@ -168,6 +204,8 @@ Check CloudWatch logs for the Lambda function:
 ```bash
 aws logs tail /aws/lambda/your-function-name --follow
 ```
+
+Tip: The function name is available in Terraform outputs as `lambda_function_name`, or you can find it in the AWS Console under Lambda.
 
 <!-- BEGIN_TF_DOCS -->
 
