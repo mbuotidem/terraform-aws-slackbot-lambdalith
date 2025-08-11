@@ -83,7 +83,7 @@ The module creates the following AWS resources:
 - IAM roles and policies
 - Parameter Store for generated Slack App manifest
 
-It ships with sample lambda function code so you can verify functionality. However, you can choose to use your own lambda using either the zip or directory custom sources described [below](#custom-lambda-source-code)
+It ships with sample lambda function code so you can verify functionality. However, you can choose to use your own lambda using either the zip or directory custom sources described [below](#configuring-lambda-function-source)
 
 ## Configuring Lambda Function Source
 
@@ -94,8 +94,8 @@ Only one mode should be used at a time, controlled by `lambda_source_type`:
 - directory: Set `lambda_source_type = "directory"` and set `lambda_source_path` to your source folder.
 - zip: Set `lambda_source_type = "zip"` and set `lambda_source_path` to your built zip file.
 
-### Default (Template-based)
-The default mode uses a template-based approach where the Lambda code is generated from `lambda/index.py` with configurable parameters:
+### Default 
+The default mode uses a template-based approach where the Lambda code is generated from `lambda/index.py` with configurable `bedrock_model_id`:
 
 ```hcl
 module "slack_bot" {
@@ -146,26 +146,29 @@ Note: Only set `lambda_source_path` when `lambda_source_type` is `directory` or 
 
 ## Lambda Layer for Dependencies
 
-The module builds and attaches a Lambda layer from a `requirements.txt` file. How the requirements are chosen depends on the source mode:
+The module always builds and attaches a Lambda layer from a requirements.txt. The dependency source follows this precedence (applies to all modes):
 
-- Default mode: By default uses the module's built-in `lambda/requirements.txt`. You can override this via:
-   - `requirements_inline` — list of dependency specifiers rendered into a requirements file, or
-   - `requirements_txt_override_path` — path to a requirements.txt on your machine.
-   The inline list takes precedence if both are provided.
-- Directory mode: Uses the `requirements.txt` file located in your custom source directory (`lambda_source_path`).
-- Zip mode: Your ZIP provides the function code. The module still builds and attaches a dependency layer using the module's built-in `lambda/requirements.txt` (or your overrides if set as above). Ensure your ZIP either excludes those dependencies (to keep it slim) or that versions are compatible with the layer. If you need full control, prefer directory mode.
+1) `requirements_inline` — if non-empty, these lines are written to a temp requirements.txt and used.
+2) `requirements_txt_override_path` — if provided, that file is used.
+3) If `lambda_source_type = "directory"`, use `<lambda_source_path>/requirements.txt`.
+4) Otherwise, fall back to the module default at `lambda/requirements.txt`.
+
+Mode notes:
+- Default mode: Falls back to the module’s `lambda/requirements.txt` unless you set an override (1 or 2 above).
+- Directory mode: Uses your directory’s requirements.txt unless overridden by (1) or (2).
+- Zip mode: Your ZIP supplies code only. The layer is still built and attached using the same precedence above. Prefer keeping third-party deps out of the ZIP to avoid duplication; if you include them, ensure versions remain compatible with the layer.
 
 ### How it works:
 
-1. **Requirements file**: Place your Python dependencies in `requirements.txt` in the same directory as your Lambda code
-2. **Automatic building (requires Docker)**: The module builds the layer using Docker for the linux/amd64 architecture. Ensure Docker is installed and running.
-3. **Layer attachment**: The layer is automatically attached to the Lambda function
+1. **Select requirements**: The module resolves the requirements file per the precedence above.
+2. **Build the layer (Docker required)**: A container matching the Lambda runtime (linux/amd64, your configured Python version) runs `pip install -r <requirements> -t <layer/python>` to populate the layer’s `python/` directory.
+3. **Attach the layer**: The produced layer is attached to the Lambda. If `enable_application_signals = true`, the OpenTelemetry layer is also attached.
 
 Notes:
-- Docker is required for building the layer in default and directory modes; without Docker, the build will fail.
-- For zip mode, package dependencies in your zip, or rely on the generated layer to keep your zip slim.
+- Docker is required for building the layer in all modes; without Docker, the build will fail. If no requirements.txt is found, the build skips installs and produces an (empty) layer.
+- In zip mode, either keep dependencies out of the ZIP and rely on the layer, or ensure any bundled deps are compatible with the layer’s versions.
 
-### Examples (Default mode overrides)
+### Examples (override dependencies in any mode)
 
 Inline list:
 
