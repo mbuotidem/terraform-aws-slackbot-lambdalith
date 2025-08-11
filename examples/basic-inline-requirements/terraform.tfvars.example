@@ -1,0 +1,4 @@
+# Example variables for the inline requirements example
+slack_bot_token      = "xoxb-your-token-here"
+slack_signing_secret = "your-signing-secret"
+lambda_function_name = "basic-inline-requirements"

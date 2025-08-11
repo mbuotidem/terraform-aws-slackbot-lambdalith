@@ -103,6 +103,24 @@ variable "lambda_source_type" {
   }
 }
 
+# Optional: allow callers to influence dependencies in default mode
+variable "requirements_txt_override_path" {
+  description = "Path to a requirements.txt file to use for building the Lambda layer (takes precedence over the module's default when provided)."
+  type        = string
+  default     = ""
+
+  validation {
+    condition     = var.requirements_txt_override_path == "" || can(file(var.requirements_txt_override_path))
+    error_message = "requirements_txt_override_path must point to an existing file if provided."
+  }
+}
+
+variable "requirements_inline" {
+  description = "Inline list of Python dependency specifiers to render into a requirements.txt for the Lambda layer. Takes precedence over requirements_txt_override_path when non-empty."
+  type        = list(string)
+  default     = []
+}
+
 variable "slack_app_name" {
   description = "Name of the Slack app in the manifest"
   type        = string

@@ -37,6 +37,7 @@ fmt: ## Format Terraform files
 docs: ## Generate documentation
 	terraform-docs .
 	terraform-docs ./examples/basic
+	terraform-docs ./examples/basic-inline-requirements
 	terraform-docs ./examples/custom-lambda-zip
 	terraform-docs ./examples/custom-lambda-directory
 	terraform-docs ./examples/lambda-function-url

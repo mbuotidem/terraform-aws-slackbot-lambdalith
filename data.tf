@@ -3,12 +3,53 @@ data "aws_region" "current" {}
 
 data "aws_caller_identity" "current" {}
 
+# Resolve requirements source for layer build
+# Priority: requirements_inline -> requirements_txt_override_path -> default per mode
+locals {
+  requirements_inline_enabled = length(var.requirements_inline) > 0
+  requirements_file_selected  = var.requirements_txt_override_path != ""
+
+  # Directory to mount into /var/task inside the Docker container
+  requirements_host_dir = local.requirements_inline_enabled ? "${path.module}/layer_build/reqsrc" : (
+    var.lambda_source_type == "directory" ? var.lambda_source_path : (
+  local.requirements_file_selected ? dirname(var.requirements_txt_override_path) : "${path.module}/lambda"))
+
+  # Path to requirements.txt inside host dir
+  requirements_host_path = local.requirements_inline_enabled ? "${path.module}/layer_build/reqsrc/requirements.txt" : (
+  local.requirements_file_selected ? var.requirements_txt_override_path : "${local.requirements_host_dir}/requirements.txt")
+
+  # Stable hash for triggers to avoid plan/apply inconsistencies
+  requirements_trigger_hash = local.requirements_inline_enabled ? sha256(join("\n", var.requirements_inline)) : (
+    local.requirements_file_selected ? (fileexists(var.requirements_txt_override_path) ? filemd5(var.requirements_txt_override_path) : "") : (
+      var.lambda_source_type == "directory" ? (fileexists("${var.lambda_source_path}/requirements.txt") ? filemd5("${var.lambda_source_path}/requirements.txt") : "") : filemd5("${path.module}/lambda/requirements.txt")
+    )
+  )
+}
+
+# If inline requirements are provided, materialize them to a file
+resource "local_file" "requirements_inline_file" {
+  count      = local.requirements_inline_enabled ? 1 : 0
+  filename   = local.requirements_host_path
+  content    = join("\n", var.requirements_inline)
+  depends_on = [null_resource.requirements_inline_dir]
+}
+
+# Ensure directory exists for inline requirements file
+resource "null_resource" "requirements_inline_dir" {
+  count = local.requirements_inline_enabled ? 1 : 0
+  provisioner "local-exec" {
+    command = "mkdir -p ${path.module}/layer_build/reqsrc"
+  }
+}
+
 # Build Lambda layer from requirements.txt
 resource "null_resource" "lambda_layer_build" {
   triggers = {
-    requirements   = fileexists("${var.lambda_source_type == "directory" ? var.lambda_source_path : "${path.module}/lambda"}/requirements.txt") ? filemd5("${var.lambda_source_type == "directory" ? var.lambda_source_path : "${path.module}/lambda"}/requirements.txt") : ""
+    # Hash of selected requirements content (stable across plan/apply)
+    requirements   = local.requirements_trigger_hash
     python_version = var.python_version
   }
+  depends_on = [local_file.requirements_inline_file]
 
   provisioner "local-exec" {
     command = <<-EOT
@@ -19,7 +60,7 @@ resource "null_resource" "lambda_layer_build" {
       docker run --rm \
         --platform=linux/amd64 \
         --entrypoint="" \
-        -v ${var.lambda_source_type == "directory" ? var.lambda_source_path : "${path.module}/lambda"}:/var/task:ro \
+        -v ${local.requirements_host_dir}:/var/task:ro \
         -v ${path.module}/layer_build/python:/var/layer:rw \
         public.ecr.aws/lambda/python:${var.python_version} \
         /bin/bash -c "
@@ -40,7 +81,7 @@ data "archive_file" "lambda_layer_zip" {
   source_dir  = "${path.module}/layer_build"
   output_path = "${path.module}/layer_build/lambda_layer.zip"
 
-  depends_on = [null_resource.lambda_layer_build]
+  depends_on = [null_resource.lambda_layer_build, local_file.requirements_inline_file]
 }
 
 # Trigger for Lambda code changes

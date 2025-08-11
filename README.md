@@ -14,7 +14,7 @@ Docker
 
 ## Setup
 
-Important: The initial apply uses placeholder Slack credentials so the app and manifest can be created. The bot will not respond in Slack until you replace slack_bot_token and slack_signing_secret with real values and re-apply.
+Important: The initial apply uses placeholder Slack credentials so the app and manifest can be created. The bot will not respond in Slack until you replace `slack_bot_token` and `slack_signing_secret` with real values and re-apply.
 
 ```hcl
 module "slack_bot" {
@@ -83,7 +83,7 @@ The module creates the following AWS resources:
 - IAM roles and policies
 - Parameter Store for generated Slack App manifest
 
-It ships with sample lambda function code so you can verify functionality. However, you will ultimately want to wire up your own lambda using either the zip or directory custom sources described [below](#custom-lambda-source-code)
+It ships with sample lambda function code so you can verify functionality. However, you can choose to use your own lambda using either the zip or directory custom sources described [below](#custom-lambda-source-code)
 
 ## Configuring Lambda Function Source
 
@@ -146,7 +146,14 @@ Note: Only set `lambda_source_path` when `lambda_source_type` is `directory` or 
 
 ## Lambda Layer for Dependencies
 
-The module supports automatic creation of Lambda layers from a `requirements.txt` file. This works for both default mode (using the built-in `lambda/requirements.txt`) and directory mode (using a `requirements.txt` file in your custom directory). It does not apply to zip mode since the dependencies should be included in your pre-built ZIP file.
+The module builds and attaches a Lambda layer from a `requirements.txt` file. How the requirements are chosen depends on the source mode:
+
+- Default mode: By default uses the module's built-in `lambda/requirements.txt`. You can override this via:
+   - `requirements_inline` — list of dependency specifiers rendered into a requirements file, or
+   - `requirements_txt_override_path` — path to a requirements.txt on your machine.
+   The inline list takes precedence if both are provided.
+- Directory mode: Uses the `requirements.txt` file located in your custom source directory (`lambda_source_path`).
+- Zip mode: Your ZIP provides the function code. The module still builds and attaches a dependency layer using the module's built-in `lambda/requirements.txt` (or your overrides if set as above). Ensure your ZIP either excludes those dependencies (to keep it slim) or that versions are compatible with the layer. If you need full control, prefer directory mode.
 
 ### How it works:
 
@@ -157,6 +164,31 @@ The module supports automatic creation of Lambda layers from a `requirements.txt
 Notes:
 - Docker is required for building the layer in default and directory modes; without Docker, the build will fail.
 - For zip mode, package dependencies in your zip, or rely on the generated layer to keep your zip slim.
+
+### Examples (Default mode overrides)
+
+Inline list:
+
+```hcl
+module "slack_bot" {
+   source = "mbuotidem/slackbot-lambdalith/aws"
+
+   requirements_inline = [
+      "boto3==1.34.131",
+      "slack-bolt>=1.21,<2"
+   ]
+}
+```
+
+File path override:
+
+```hcl
+module "slack_bot" {
+   source = "mbuotidem/slackbot-lambdalith/aws"
+
+   requirements_txt_override_path = "/absolute/path/to/requirements.txt"
+}
+```
 
 
 ### Example requirements.txt:
@@ -248,6 +280,8 @@ Tip: The function name is available in Terraform outputs as `lambda_function_nam
 | <a name="input_log_retention_days"></a> [log\_retention\_days](#input\_log\_retention\_days) | Number of days to retain logs in CloudWatch | `number` | `731` | no |
 | <a name="input_opentelemetry_python_layer_arns"></a> [opentelemetry\_python\_layer\_arns](#input\_opentelemetry\_python\_layer\_arns) | Map of AWS region to OpenTelemetry Lambda Layer ARN for Python. | `map(string)` | <pre>{<br/>  "af-south-1": "arn:aws:lambda:af-south-1:904233096616:layer:AWSOpenTelemetryDistroPython:10",<br/>  "ap-east-1": "arn:aws:lambda:ap-east-1:888577020596:layer:AWSOpenTelemetryDistroPython:10",<br/>  "ap-northeast-1": "arn:aws:lambda:ap-northeast-1:615299751070:layer:AWSOpenTelemetryDistroPython:13",<br/>  "ap-northeast-2": "arn:aws:lambda:ap-northeast-2:615299751070:layer:AWSOpenTelemetryDistroPython:13",<br/>  "ap-northeast-3": "arn:aws:lambda:ap-northeast-3:615299751070:layer:AWSOpenTelemetryDistroPython:12",<br/>  "ap-south-1": "arn:aws:lambda:ap-south-1:615299751070:layer:AWSOpenTelemetryDistroPython:13",<br/>  "ap-south-2": "arn:aws:lambda:ap-south-2:796973505492:layer:AWSOpenTelemetryDistroPython:10",<br/>  "ap-southeast-1": "arn:aws:lambda:ap-southeast-1:615299751070:layer:AWSOpenTelemetryDistroPython:12",<br/>  "ap-southeast-2": "arn:aws:lambda:ap-southeast-2:615299751070:layer:AWSOpenTelemetryDistroPython:13",<br/>  "ap-southeast-3": "arn:aws:lambda:ap-southeast-3:039612877180:layer:AWSOpenTelemetryDistroPython:10",<br/>  "ap-southeast-4": "arn:aws:lambda:ap-southeast-4:713881805771:layer:AWSOpenTelemetryDistroPython:10",<br/>  "ca-central-1": "arn:aws:lambda:ca-central-1:615299751070:layer:AWSOpenTelemetryDistroPython:13",<br/>  "eu-central-1": "arn:aws:lambda:eu-central-1:615299751070:layer:AWSOpenTelemetryDistroPython:13",<br/>  "eu-central-2": "arn:aws:lambda:eu-central-2:156041407956:layer:AWSOpenTelemetryDistroPython:10",<br/>  "eu-north-1": "arn:aws:lambda:eu-north-1:615299751070:layer:AWSOpenTelemetryDistroPython:13",<br/>  "eu-south-1": "arn:aws:lambda:eu-south-1:257394471194:layer:AWSOpenTelemetryDistroPython:10",<br/>  "eu-south-2": "arn:aws:lambda:eu-south-2:490004653786:layer:AWSOpenTelemetryDistroPython:10",<br/>  "eu-west-1": "arn:aws:lambda:eu-west-1:615299751070:layer:AWSOpenTelemetryDistroPython:13",<br/>  "eu-west-2": "arn:aws:lambda:eu-west-2:615299751070:layer:AWSOpenTelemetryDistroPython:13",<br/>  "eu-west-3": "arn:aws:lambda:eu-west-3:615299751070:layer:AWSOpenTelemetryDistroPython:13",<br/>  "il-central-1": "arn:aws:lambda:il-central-1:746669239226:layer:AWSOpenTelemetryDistroPython:10",<br/>  "me-central-1": "arn:aws:lambda:me-central-1:739275441131:layer:AWSOpenTelemetryDistroPython:10",<br/>  "me-south-1": "arn:aws:lambda:me-south-1:980921751758:layer:AWSOpenTelemetryDistroPython:10",<br/>  "sa-east-1": "arn:aws:lambda:sa-east-1:615299751070:layer:AWSOpenTelemetryDistroPython:13",<br/>  "us-east-1": "arn:aws:lambda:us-east-1:615299751070:layer:AWSOpenTelemetryDistroPython:16",<br/>  "us-east-2": "arn:aws:lambda:us-east-2:615299751070:layer:AWSOpenTelemetryDistroPython:13",<br/>  "us-west-1": "arn:aws:lambda:us-west-1:615299751070:layer:AWSOpenTelemetryDistroPython:20",<br/>  "us-west-2": "arn:aws:lambda:us-west-2:615299751070:layer:AWSOpenTelemetryDistroPython:20"<br/>}</pre> | no |
 | <a name="input_python_version"></a> [python\_version](#input\_python\_version) | Python version for the Lambda layer | `string` | `"3.12"` | no |
+| <a name="input_requirements_inline"></a> [requirements\_inline](#input\_requirements\_inline) | Inline list of Python dependency specifiers to render into a requirements.txt for the Lambda layer. Takes precedence over requirements\_txt\_override\_path when non-empty. | `list(string)` | `[]` | no |
+| <a name="input_requirements_txt_override_path"></a> [requirements\_txt\_override\_path](#input\_requirements\_txt\_override\_path) | Path to a requirements.txt file to use for building the Lambda layer (takes precedence over the module's default when provided). | `string` | `""` | no |
 | <a name="input_slack_app_description"></a> [slack\_app\_description](#input\_slack\_app\_description) | Description of the Slack app assistant | `string` | `"Hi, I am an assistant built using Bolt for Python. I am here to help you out!"` | no |
 | <a name="input_slack_app_name"></a> [slack\_app\_name](#input\_slack\_app\_name) | Name of the Slack app in the manifest | `string` | `"Bolt Python Assistant"` | no |
 | <a name="input_slack_bot_token"></a> [slack\_bot\_token](#input\_slack\_bot\_token) | The Slack bot token for authentication | `string` | `"xoxb-"` | no |
@@ -305,9 +339,11 @@ Tip: The function name is available in Terraform outputs as `lambda_function_nam
 | [aws_ssm_parameter.slack_app_manifest](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssm_parameter) | resource |
 | [local_file.dispatcher_lambda_code](https://registry.terraform.io/providers/hashicorp/local/latest/docs/resources/file) | resource |
 | [local_file.lambda_code](https://registry.terraform.io/providers/hashicorp/local/latest/docs/resources/file) | resource |
+| [local_file.requirements_inline_file](https://registry.terraform.io/providers/hashicorp/local/latest/docs/resources/file) | resource |
 | [local_file.slack_app_manifest](https://registry.terraform.io/providers/hashicorp/local/latest/docs/resources/file) | resource |
 | [null_resource.lambda_code_trigger](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) | resource |
 | [null_resource.lambda_layer_build](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) | resource |
+| [null_resource.requirements_inline_dir](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) | resource |
 | [time_static.slack_bot_token_update](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/static) | resource |
 | [time_static.slack_signing_secret_update](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/static) | resource |
 <!-- END_TF_DOCS -->
