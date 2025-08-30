@@ -136,6 +136,7 @@ data "aws_bedrock_foundation_model" "anthropic" {
 
 # Create dispatcher Lambda function
 resource "local_file" "dispatcher_lambda_code" {
+  count    = var.use_function_url ? 0 : 1
   content  = <<EOF
 import json
 import boto3

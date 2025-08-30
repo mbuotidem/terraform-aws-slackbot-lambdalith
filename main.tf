@@ -160,7 +160,7 @@ resource "aws_lambda_function" "slack_bot_lambda" {
   publish = true
 
   # Use Lambda layer for dependencies if created
-  layers = var.enable_application_signals ? [aws_lambda_layer_version.dependencies.arn, var.opentelemetry_python_layer_arns[data.aws_region.current]] : [aws_lambda_layer_version.dependencies.arn]
+  layers = var.enable_application_signals ? [aws_lambda_layer_version.dependencies.arn, var.opentelemetry_python_layer_arns[data.aws_region.current.name]] : [aws_lambda_layer_version.dependencies.arn]
 
   environment {
     variables = merge(
