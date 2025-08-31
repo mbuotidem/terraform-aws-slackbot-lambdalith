@@ -190,6 +190,7 @@ EOF
 
 # Archive the dispatcher Lambda function
 data "archive_file" "dispatcher_zip" {
+  count       = var.use_function_url ? 0 : 1
   type        = "zip"
   source_dir  = "${path.module}/dispatcher_build"
   output_path = "${path.module}/dispatcher_build/dispatcher_function.zip"

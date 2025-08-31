@@ -306,14 +306,14 @@ resource "aws_apigatewayv2_integration" "slack_bot_integration" {
 # Dispatcher Lambda Function (returns immediate response and invokes main Lambda async)
 resource "aws_lambda_function" "slack_bot_dispatcher" {
   count            = local.create_gateway_and_dispatcher ? 1 : 0
-  filename         = data.archive_file.dispatcher_zip.output_path
+  filename         = data.archive_file.dispatcher_zip[0].output_path
   function_name    = "${var.lambda_function_name}-dispatcher"
   role             = aws_iam_role.slack_bot_dispatcher_role[0].arn
   handler          = "index.handler"
   runtime          = "python${var.python_version}"
   timeout          = 3
   description      = "Dispatcher that returns immediate response and invokes main Lambda async"
-  source_code_hash = data.archive_file.dispatcher_zip.output_base64sha256
+  source_code_hash = data.archive_file.dispatcher_zip[0].output_base64sha256
   publish          = true
   memory_size      = 1024
   environment {
