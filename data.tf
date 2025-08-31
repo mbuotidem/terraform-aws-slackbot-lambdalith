@@ -47,17 +47,6 @@ resource "local_file" "requirements_inline_file" {
   count      = local.requirements_inline_enabled ? 1 : 0
   filename   = local.requirements_host_path
   content    = join("\n", var.requirements_inline)
-  depends_on = [null_resource.requirements_inline_dir]
-}
-
-# Ensure directory exists for inline requirements file
-resource "null_resource" "requirements_inline_dir" {
-  count      = local.requirements_inline_enabled ? 1 : 0
-  depends_on = [null_resource.init_build_directories]
-}
-
-# Ensure layer build directory structure exists
-resource "null_resource" "lambda_layer_init" {
   depends_on = [null_resource.init_build_directories]
 }
 
@@ -68,7 +57,7 @@ resource "null_resource" "lambda_layer_build" {
     requirements   = local.requirements_trigger_hash
     python_version = var.python_version
   }
-  depends_on = [local_file.requirements_inline_file, null_resource.lambda_layer_init]
+  depends_on = [local_file.requirements_inline_file, null_resource.init_build_directories]
 
   provisioner "local-exec" {
     command = <<-EOT
@@ -102,7 +91,7 @@ data "archive_file" "lambda_layer_zip" {
   source_dir  = "${path.module}/layer_build"
   output_path = "${path.module}/layer_build/lambda_layer.zip"
 
-  depends_on = [null_resource.lambda_layer_build, null_resource.lambda_layer_init, local_file.requirements_inline_file]
+  depends_on = [null_resource.lambda_layer_build, null_resource.init_build_directories, local_file.requirements_inline_file]
 }
 
 # Trigger for Lambda code changes
