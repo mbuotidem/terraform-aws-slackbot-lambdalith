@@ -101,7 +101,7 @@ resource "aws_iam_role_policy" "slack_bot_role_policy" {
     Version = "2012-10-17"
     Statement = [
       {
-        Action   = "bedrock:InvokeModel"
+        Action   = ["bedrock:InvokeModel", "bedrock:InvokeModelWithResponseStream"]
         Effect   = "Allow"
         Resource = [data.aws_bedrock_foundation_model.anthropic.model_arn, "arn:aws:bedrock:*::foundation-model/${var.bedrock_model_id}", "arn:aws:bedrock:*:${data.aws_caller_identity.current.account_id}:inference-profile/${var.bedrock_model_inference_profile}"]
       },
@@ -147,15 +147,19 @@ resource "aws_lambda_layer_version" "dependencies" {
 
 # Lambda Function
 resource "aws_lambda_function" "slack_bot_lambda" {
-  filename = var.lambda_source_type == "zip" ? var.lambda_source_path : (var.lambda_source_type == "directory" ? data.archive_file.custom_lambda_zip[0].output_path : data.archive_file.lambda_zip[0].output_path)
+  filename = var.lambda_source_type == "zip" ? var.lambda_source_path : (
+    var.lambda_source_type == "directory" ? data.archive_file.custom_lambda_zip[0].output_path : data.archive_file.lambda_zip[0].output_path
+  )
 
-  function_name    = var.lambda_function_name
-  role             = aws_iam_role.slack_bot_role.arn
-  handler          = "index.handler"
-  runtime          = "python${var.python_version}"
-  timeout          = var.lambda_timeout
-  description      = "Handles Slack bot actions"
-  source_code_hash = var.lambda_source_type == "zip" ? filebase64sha256(var.lambda_source_path) : (var.lambda_source_type == "directory" ? data.archive_file.custom_lambda_zip[0].output_base64sha256 : data.archive_file.lambda_zip[0].output_base64sha256)
+  function_name = var.lambda_function_name
+  role          = aws_iam_role.slack_bot_role.arn
+  handler       = "index.handler"
+  runtime       = "python${var.python_version}"
+  timeout       = var.lambda_timeout
+  description   = "Handles Slack bot actions"
+  source_code_hash = var.lambda_source_type == "zip" ? filebase64sha256(var.lambda_source_path) : (
+    var.lambda_source_type == "directory" ? data.archive_file.custom_lambda_zip[0].output_base64sha256 : data.archive_file.lambda_zip[0].output_base64sha256
+  )
 
   publish = true
 
