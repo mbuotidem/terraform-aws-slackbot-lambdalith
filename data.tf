@@ -4,7 +4,7 @@ data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 
 # Initialize all required build directories to prevent "empty archive" errors
-resource "null_resource" "init_build_directories" {
+resource "terraform_data" "init_build_directories" {
   provisioner "local-exec" {
     command = <<-EOT
       mkdir -p ${path.module}/layer_build/python
@@ -13,7 +13,7 @@ resource "null_resource" "init_build_directories" {
       mkdir -p ${path.module}/dispatcher_build
       # Create placeholder files to ensure directories are never empty during Terraform planning
       touch ${path.module}/layer_build/python/.placeholder
-      touch ${path.module}/lambda_build/.placeholder  
+      touch ${path.module}/lambda_build/.placeholder
       touch ${path.module}/dispatcher_build/.placeholder
     EOT
   }
@@ -47,17 +47,17 @@ resource "local_file" "requirements_inline_file" {
   count      = local.requirements_inline_enabled ? 1 : 0
   filename   = local.requirements_host_path
   content    = join("\n", var.requirements_inline)
-  depends_on = [null_resource.init_build_directories]
+  depends_on = [terraform_data.init_build_directories]
 }
 
 # Build Lambda layer from requirements.txt
-resource "null_resource" "lambda_layer_build" {
-  triggers = {
+resource "terraform_data" "lambda_layer_build" {
+  triggers_replace = {
     # Hash of selected requirements content (stable across plan/apply)
     requirements   = local.requirements_trigger_hash
     python_version = var.python_version
   }
-  depends_on = [local_file.requirements_inline_file, null_resource.init_build_directories]
+  depends_on = [local_file.requirements_inline_file, terraform_data.init_build_directories]
 
   provisioner "local-exec" {
     command = <<-EOT
@@ -91,12 +91,12 @@ data "archive_file" "lambda_layer_zip" {
   source_dir  = "${path.module}/layer_build"
   output_path = "${path.module}/layer_build/lambda_layer.zip"
 
-  depends_on = [null_resource.lambda_layer_build, null_resource.init_build_directories, local_file.requirements_inline_file]
+  depends_on = [terraform_data.lambda_layer_build, terraform_data.init_build_directories, local_file.requirements_inline_file]
 }
 
 # Trigger for Lambda code changes
-resource "null_resource" "lambda_code_trigger" {
-  triggers = {
+resource "terraform_data" "lambda_code_trigger" {
+  triggers_replace = {
     shell_hash = sha256(join("", [
       file("${path.module}/lambda/index.py"),
       var.bedrock_model_inference_profile
@@ -105,15 +105,15 @@ resource "null_resource" "lambda_code_trigger" {
 }
 
 # Ensure lambda build directory exists
-resource "null_resource" "lambda_build_init" {
-  count = var.lambda_source_path == "" ? 1 : 0
+resource "terraform_data" "lambda_build_init" {
+  count = var.lambda_source_type == "default" ? 1 : 0
 
-  depends_on = [null_resource.init_build_directories]
+  depends_on = [terraform_data.init_build_directories]
 }
 
 # Create the Lambda function code
 resource "local_file" "lambda_code" {
-  count = var.lambda_source_path == "" ? 1 : 0
+  count = var.lambda_source_type == "default" ? 1 : 0
 
   content = templatefile("${path.module}/lambda/index.py", {
     bedrock_model_id = var.bedrock_model_inference_profile
@@ -121,24 +121,24 @@ resource "local_file" "lambda_code" {
   })
   filename = "${path.module}/lambda_build/index.py"
 
-  depends_on = [null_resource.lambda_build_init]
+  depends_on = [terraform_data.lambda_build_init]
 
   # Force recreation when trigger changes
   lifecycle {
     replace_triggered_by = [
-      null_resource.lambda_code_trigger
+      terraform_data.lambda_code_trigger
     ]
   }
 }
 
 # Archive the Lambda function code
 data "archive_file" "lambda_zip" {
-  count       = var.lambda_source_path == "" ? 1 : 0
+  count       = var.lambda_source_type == "default" ? 1 : 0
   type        = "zip"
   source_dir  = "${path.module}/lambda_build"
   output_path = "${path.module}/lambda_build/lambda_function.zip"
 
-  depends_on = [local_file.lambda_code, null_resource.lambda_build_init]
+  depends_on = [local_file.lambda_code, terraform_data.lambda_build_init]
 }
 
 # Conditional archive file for custom Lambda source
@@ -154,10 +154,10 @@ data "aws_bedrock_foundation_model" "anthropic" {
 }
 
 # Ensure dispatcher build directory exists
-resource "null_resource" "dispatcher_build_init" {
+resource "terraform_data" "dispatcher_build_init" {
   count = var.use_function_url ? 0 : 1
 
-  depends_on = [null_resource.init_build_directories]
+  depends_on = [terraform_data.init_build_directories]
 }
 
 # Create dispatcher Lambda function
@@ -213,7 +213,7 @@ def handler(event, context):
 EOF
   filename = "${path.module}/dispatcher_build/index.py"
 
-  depends_on = [null_resource.dispatcher_build_init]
+  depends_on = [terraform_data.dispatcher_build_init]
 }
 
 # Archive the dispatcher Lambda function
@@ -223,5 +223,5 @@ data "archive_file" "dispatcher_zip" {
   source_dir  = "${path.module}/dispatcher_build"
   output_path = "${path.module}/dispatcher_build/dispatcher_function.zip"
 
-  depends_on = [local_file.dispatcher_lambda_code, null_resource.dispatcher_build_init]
+  depends_on = [local_file.dispatcher_lambda_code, terraform_data.dispatcher_build_init]
 }
