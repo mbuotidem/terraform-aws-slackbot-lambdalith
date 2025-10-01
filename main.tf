@@ -181,9 +181,12 @@ resource "aws_lambda_function" "slack_bot_lambda" {
 
 
 
-  # snap_start {
-  #   apply_on = "PublishedVersions"
-  # }
+  dynamic "snap_start" {
+    for_each = var.enable_snapstart ? [1] : []
+    content {
+      apply_on = "PublishedVersions"
+    }
+  }
 
 
 
@@ -366,6 +369,16 @@ resource "aws_lambda_permission" "api_gateway_lambda_permission" {
   function_name = aws_lambda_function.slack_bot_dispatcher[0].function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.slack_bot_endpoint[0].execution_arn}/*"
+}
+
+# Lambda Permission for Function URL (required for auth type NONE)
+resource "aws_lambda_permission" "function_url_lambda_permission" {
+  count                  = var.use_function_url ? 1 : 0
+  statement_id           = "AllowExecutionFromFunctionUrl"
+  action                 = "lambda:InvokeFunctionUrl"
+  function_name          = aws_lambda_function.slack_bot_lambda.function_name
+  principal              = "*"
+  function_url_auth_type = "NONE"
 }
 
 # Generate Slack app manifest with API Gateway URL

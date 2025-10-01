@@ -201,3 +201,7 @@ variable "opentelemetry_python_layer_arns" {
   }
 }
 
+variable "enable_snapstart" {
+  default = false
+
+}
