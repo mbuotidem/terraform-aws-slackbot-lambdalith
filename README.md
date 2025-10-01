@@ -273,6 +273,7 @@ Tip: The function name is available in Terraform outputs as `lambda_function_nam
 | <a name="input_bedrock_model_inference_profile"></a> [bedrock\_model\_inference\_profile](#input\_bedrock\_model\_inference\_profile) | Inference profile ID to use | `string` | `"us.anthropic.claude-3-5-sonnet-20241022-v2:0"` | no |
 | <a name="input_enable_application_signals"></a> [enable\_application\_signals](#input\_enable\_application\_signals) | If true, enables Application signals for monitoring and observability. | `bool` | `false` | no |
 | <a name="input_enable_dispatcher_provisioned_concurrency"></a> [enable\_dispatcher\_provisioned\_concurrency](#input\_enable\_dispatcher\_provisioned\_concurrency) | Enable provisioned concurrency for the dispatcher Lambda to eliminate cold starts | `bool` | `true` | no |
+| <a name="input_enable_snapstart"></a> [enable\_snapstart](#input\_enable\_snapstart) | n/a | `bool` | `false` | no |
 | <a name="input_lambda_env_vars"></a> [lambda\_env\_vars](#input\_lambda\_env\_vars) | Environment variables to add to Lambda | `map(string)` | <pre>{<br/>  "BEDROCK_MODEL_INFERENCE_PROFILE": "us.anthropic.claude-3-5-sonnet-20241022-v2:0"<br/>}</pre> | no |
 | <a name="input_lambda_function_name"></a> [lambda\_function\_name](#input\_lambda\_function\_name) | Name of the Lambda function | `string` | `"terraform-aws-slackbot-lambdalith"` | no |
 | <a name="input_lambda_layer_name"></a> [lambda\_layer\_name](#input\_lambda\_layer\_name) | Name of the Lambda layer | `string` | `"terraform-aws-slackbot-lambdalith"` | no |
@@ -333,6 +334,7 @@ Tip: The function name is available in Terraform outputs as `lambda_function_nam
 | [aws_lambda_function_url.slack_bot_lambda](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_function_url) | resource |
 | [aws_lambda_layer_version.dependencies](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_layer_version) | resource |
 | [aws_lambda_permission.api_gateway_lambda_permission](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_permission) | resource |
+| [aws_lambda_permission.function_url_lambda_permission](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_permission) | resource |
 | [aws_lambda_provisioned_concurrency_config.slack_bot_dispatcher_concurrency](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_provisioned_concurrency_config) | resource |
 | [aws_secretsmanager_secret.slack_bot_token](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret) | resource |
 | [aws_secretsmanager_secret.slack_signing_secret](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret) | resource |
